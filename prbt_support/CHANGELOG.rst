@@ -2,6 +2,11 @@
 Changelog for package prbt_support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* make robot.launch file configurable with args
+* Contributors: Joachim Schleicher
+
 0.4.6 (2019-01-18)
 ------------------
 
