@@ -1,0 +1,32 @@
+#
+# Copyright (c) 2019 Pilz GmbH & Co. KG
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+---
+# Number representing the result of the brake test
+# (mirrors the values of CANopen object brake_test_status +  additional values)
+# see https://www.pilz.com/download/open/PRBT_6_Operat_Manual_1004685-EN-02.pdf (p.100)
+int8 result
+int8 UNKNOWN = 0
+int8 PENDING = 1
+int8 SUCCESS = 2
+int8 FAILURE = 3
+int8 NO_CONTROL = 4
+int8 ROBOT_MOTION_DETECTED = 5
+int8 JOINT_NAMES_NOT_FOUND = 6
+
+# Contains possible messages from the brake test execution
+string msg

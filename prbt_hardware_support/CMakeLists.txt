@@ -8,6 +8,8 @@ add_definitions(-Werror)
 add_definitions(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
+  actionlib
+  actionlib_msgs
   message_filters
   message_generation
   roscpp
@@ -21,6 +23,12 @@ add_message_files(
   ModbusMsgInStamped.msg
 )
 
+# action generation
+add_service_files(
+  FILES
+  BrakeTest.srv
+)
+
 generate_messages(
   DEPENDENCIES
   std_msgs
@@ -31,7 +39,7 @@ generate_messages(
 ###################################
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS message_runtime std_msgs
+  CATKIN_DEPENDS message_runtime actionlib actionlib_msgs std_msgs std_srvs
 )
 
 ###########
@@ -61,6 +69,13 @@ add_executable(modbus_brake_test_announcer_node
 )
 add_dependencies(modbus_brake_test_announcer_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(modbus_brake_test_announcer_node ${catkin_LIBRARIES})
+
+add_executable(brake_test_executor_node
+  src/brake_test_executor_node.cpp
+  src/brake_test_executor.cpp
+)
+add_dependencies(brake_test_executor_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
+target_link_libraries(brake_test_executor_node ${catkin_LIBRARIES})
 
 # +++++++++++++++++++++++++++++++++
 # + Build modbus read client node +
@@ -170,6 +185,16 @@ if(CATKIN_ENABLE_TESTING)
     src/brake_test_announcer.cpp
   )
   target_link_libraries(unittest_modbus_brake_test_announcer
+    ${catkin_LIBRARIES} ${pilz_testutils_LIBRARIES}
+  )
+  #----------------------------------
+
+  # --- BrakeTestUtils unit test ---
+  add_rostest_gtest(unittest_brake_test_utils
+    test/unittests/unittest_brake_test_utils.test
+    test/unittests/unittest_brake_test_utils.cpp
+  )
+  target_link_libraries(unittest_brake_test_utils
     ${catkin_LIBRARIES} ${pilz_testutils_LIBRARIES}
   )
   #----------------------------------
