@@ -191,6 +191,7 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(unittest_brake_test_utils
     test/unittests/unittest_brake_test_utils.test
     test/unittests/unittest_brake_test_utils.cpp
+    test/unittests/joint_states_publisher_mock.cpp
   )
   target_link_libraries(unittest_brake_test_utils
     ${catkin_LIBRARIES} ${pilz_testutils_LIBRARIES}
