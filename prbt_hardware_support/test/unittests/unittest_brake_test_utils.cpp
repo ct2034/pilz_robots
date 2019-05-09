@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Pilz GmbH & Co. KG
+ * Copyright (c) 2019 Pilz GmbH & Co. KG
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -27,17 +27,15 @@
 
 #include <prbt_hardware_support/brake_test_utils.h>
 #include <prbt_hardware_support/brake_test_utils_exception.h>
+#include <prbt_hardware_support/joint_states_publisher_mock.h>
 
 namespace brake_test_utils_test
 {
 
 using namespace prbt_hardware_support;
 using sensor_msgs::JointState;
-using sensor_msgs::JointStateConstPtr;
 using sensor_msgs::JointStatePtr;
-
-static const std::string JOINT_STATES_TOPIC_NAME{"/joint_states"};
-static constexpr unsigned int JOINT_STATES_TOPIC_QUEUE_SIZE{1};
+using sensor_msgs::JointStateConstPtr;
 
 /**
  * @brief Checks for identical names and positions in joint state messages.
@@ -63,94 +61,6 @@ static ::testing::AssertionResult compareJointStateMessages(const JointStateCons
   }
 
   return ::testing::AssertionSuccess();
-}
-
-/**
- * @brief Asynchronously publishes a message on the /joint_states topic with rate ~100Hz.
- */
-class JointStatesPublisherMock
-{
-public:
-  JointStatesPublisherMock();
-
-  ~JointStatesPublisherMock();
-
-  /**
-   * @brief Start a new thread publishing joint states.
-   *
-   * @param move If true, a movement is simulated, otherwise the positions do not change.
-   */
-  void startAsync(bool move = false);
-
-  void terminate();
-
-  /**
-   * @brief Obtain the message that is published next.
-   */
-  JointStateConstPtr getNextMessage();
-
-private:
-  void start(bool positions_fixed);
-
-private:
-  ros::NodeHandle nh_;
-  ros::Publisher joint_states_pub_;
-  std::thread thread_;
-  std::atomic_bool terminate_;
-  std::mutex msg_mutex_;
-  JointState msg_;
-};
-
-JointStatesPublisherMock::JointStatesPublisherMock()
-{
-  joint_states_pub_ = nh_.advertise<JointState>(JOINT_STATES_TOPIC_NAME, JOINT_STATES_TOPIC_QUEUE_SIZE);
-  msg_.name = {"joint1", "joint2"};
-  msg_.position = {0.1, -0.11};
-}
-
-JointStatesPublisherMock::~JointStatesPublisherMock()
-{
-  terminate();
-}
-
-void JointStatesPublisherMock::startAsync(bool move)
-{
-  terminate_ = false;
-  thread_ = std::thread{ [this, move]{ this->start(move); } };
-}
-
-void JointStatesPublisherMock::terminate()
-{
-  terminate_ = true;
-  if (thread_.joinable())
-  {
-    thread_.join();
-  }
-}
-
-JointStateConstPtr JointStatesPublisherMock::getNextMessage()
-{
-  std::lock_guard<std::mutex> lock(msg_mutex_);
-  JointStateConstPtr msg(new JointState(msg_));
-  return msg;
-}
-
-void JointStatesPublisherMock::start(bool move)
-{
-  while (!terminate_)
-  {
-    {
-      std::lock_guard<std::mutex> lock(msg_mutex_);
-      JointStateConstPtr msg(new JointState(msg_));
-      joint_states_pub_.publish(msg);
-      if (move)
-      {
-        // change positions; reaches limit after > 100 seconds
-        msg_.position.at(0) = std::min(1000.0, msg_.position.at(0)+0.1);
-      }
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  }
 }
 
 /**

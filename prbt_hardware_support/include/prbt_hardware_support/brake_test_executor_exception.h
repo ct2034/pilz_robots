@@ -20,6 +20,8 @@
 
 #include <stdexcept>
 
+#include <prbt_hardware_support/BrakeTest.h>
+
 namespace prbt_hardware_support
 {
 
@@ -29,11 +31,27 @@ namespace prbt_hardware_support
 class BrakeTestExecutorException : public std::runtime_error
 {
 public:
-  BrakeTestExecutorException(const std::string &what_arg)
-    : std::runtime_error(what_arg)
-  {
-  }
+  BrakeTestExecutorException(const std::string &what_arg,
+                             const int8_t error_value = BrakeTest::Response::FAILURE);
+
+public:
+  int8_t getErrorValue() const;
+
+private:
+  int8_t error_value_;
 };
+
+BrakeTestExecutorException::BrakeTestExecutorException(const std::string &what_arg,
+                                                       const int8_t error_value)
+  : std::runtime_error(what_arg)
+  , error_value_(error_value)
+{
+}
+
+inline int8_t BrakeTestExecutorException::getErrorValue() const
+{
+  return error_value_;
+}
 
 }
 

@@ -2018,7 +2018,7 @@ PDOMapping=1
 ObjFlags=0x1
 
 [2060]
-ParameterName=brake_vendor_parameters_and_status
+ParameterName=brake_test
 ObjectType=0x9
 SubNumber=4
 
@@ -2026,8 +2026,11 @@ SubNumber=4
 ParameterName=brake_test_duration
 ObjectType=0x7
 DataType=0x0006
-AccessType=const
+AccessType=ro
+DefaultValue=2500
 PDOMapping=0
+ObjFlags=1
+ParameterValue=2500
 
 
 [2060sub2]
@@ -2035,11 +2038,15 @@ ParameterName=start_brake_test
 ObjectType=0x7
 DataType=0x0005
 AccessType=rw
+DefaultValue=0
 PDOMapping=0
+ParameterValue=0
 
 [2060sub3]
 ParameterName=brake_test_status
 ObjectType=0x7
 DataType=0x0005
 AccessType=ro
+DefaultValue=0
 PDOMapping=0
+ParameterValue=0

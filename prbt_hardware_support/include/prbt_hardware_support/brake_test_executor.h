@@ -49,14 +49,17 @@ private:
   void triggerBrakeTestForJoint(const std::string& joint_name);
   BrakeTestStatus getBrakeTestStatusForJoint(const std::string& joint_name);
   ros::Duration getBrakeTestDuration(const std::string& joint_name);
+  void checkBrakeTestResultForJoint(const std::string& joint_name);
 
 private:
+  ros::NodeHandle nh_general_;
   ros::NodeHandle nh_;
   //! Service which can be called by the user to trigger and execute a
   //! brake test for all joints.
   ros::ServiceServer brake_test_srv_;
 
-  ros::ServiceClient canopen_srv_client_;
+  ros::ServiceClient canopen_srv_get_client_;
+  ros::ServiceClient canopen_srv_set_client_;
 
 };
 

@@ -26,8 +26,7 @@
 
 #include <prbt_hardware_support/brake_test_utils_exception.h>
 
-static const std::string TOPIC_NAME{"/joint_states"};
-static const ros::Duration JOINT_STATES_TOPIC_TIMEOUT{0.1};
+static const std::string TOPIC_NAME{"/prbt/joint_states"};
 static constexpr double JOINT_STATES_COMPARISON_FREQUENCY{10.0};
 static constexpr double DEFAULT_JOINT_STATES_COMPARISON_TOLERANCE{0.001};
 static constexpr double DEFAULT_ROBOT_MOTION_TIMEOUT_S{1.0};
@@ -82,7 +81,7 @@ bool BrakeTestUtils::detectRobotMotion(double timeout_s)
 
 sensor_msgs::JointStateConstPtr BrakeTestUtils::getCurrentJointStates()
 {
-  auto msg{ros::topic::waitForMessage<sensor_msgs::JointState>(TOPIC_NAME, JOINT_STATES_TOPIC_TIMEOUT)};
+  auto msg{ros::topic::waitForMessage<sensor_msgs::JointState>(TOPIC_NAME, ros::Duration(1, 0))};
   if (msg == nullptr)
   {
     throw GetCurrentJointStatesException("Could not obtain message from joint_states topic.");
