@@ -30,11 +30,15 @@ namespace prbt_hardware_support
 BrakeTestExecutor::BrakeTestExecutor(ros::NodeHandle& nh)
   :nh_(nh)
 {
-  brake_test_srv_ = nh_.advertiseService("prbt/execute_braketest",
+  brake_test_srv_ = nh_.advertiseService("execute_braketest",
                                          &BrakeTestExecutor::executeBraketest,
                                          this);
 
-  canopen_srv_client_ = nh_.serviceClient<BrakeTest>("prbt/driver/get_object");
+  canopen_srv_get_client_ = nh_general_.serviceClient<canopen_chain_node::GetObject>("driver/get_object");
+  canopen_srv_set_client_ = nh_general_.serviceClient<canopen_chain_node::SetObject>("driver/set_object");
+
+  canopen_srv_get_client_.waitForExistence();
+  canopen_srv_set_client_.waitForExistence();
 }
 
 ros::Duration BrakeTestExecutor::getBrakeTestDuration(const std::string& joint_name)
@@ -44,7 +48,8 @@ ros::Duration BrakeTestExecutor::getBrakeTestDuration(const std::string& joint_n
   srv.request.object = "2060sub1";
   srv.request.cached = false;
 
-  if (!canopen_srv_client_.call(srv))
+  ROS_INFO_STREAM("Call \"brake test duration\" service for \"" << joint_name << "\"");
+  if (!canopen_srv_get_client_.call(srv))
   {
     throw BrakeTestExecutorException("CANopen service to request brake test duration failed",
                                      BrakeTest::Response::FAILED_TO_DETERMINE_DURATION); //=> service response invalid
@@ -56,7 +61,8 @@ ros::Duration BrakeTestExecutor::getBrakeTestDuration(const std::string& joint_n
                                      BrakeTest::Response::FAILED_TO_DETERMINE_DURATION);
   }
 
-  return ros::Duration(  std::stoi(srv.response.value)/1000  );
+  ROS_INFO_STREAM("Brake test duration for joint \"" << joint_name << "\" is: " << srv.response.value << "ms");
+  return ros::Duration(  std::stoi(srv.response.value)/1000, 0  );
 }
 
 void BrakeTestExecutor::triggerBrakeTestForJoint(const std::string& joint_name)
@@ -64,10 +70,11 @@ void BrakeTestExecutor::triggerBrakeTestForJoint(const std::string& joint_name)
   canopen_chain_node::SetObject srv;
   srv.request.node = joint_name;
   srv.request.object = "2060sub2";
-  srv.request.value = 1; // Demand brake test
+  srv.request.value = "1"; // Demand brake test
   srv.request.cached = false;
 
-  if (!canopen_srv_client_.call(srv))
+  ROS_INFO_STREAM("Call \"trigger brake test\" service for \"" << joint_name << "\"");
+  if (!canopen_srv_set_client_.call(srv))
   {
     throw BrakeTestExecutorException("CANopen service for brake test execution failed",
                                      BrakeTest::Response::TRIGGERING_OF_BRAKE_TEST_FAILED); //=> service response invalid
@@ -87,18 +94,33 @@ BrakeTestExecutor::BrakeTestStatus BrakeTestExecutor::getBrakeTestStatusForJoint
   srv.request.object = "2060sub3";
   srv.request.cached = false;
 
-  if (!canopen_srv_client_.call(srv))
+  ROS_INFO_STREAM("Call \"get status brake test\" service for \"" << joint_name << "\"");
+  if (!canopen_srv_get_client_.call(srv))
   {
     throw BrakeTestExecutorException("CANopen service to request brake test status failed",
                                      BrakeTest::Response::FAILED_TO_GET_STATUS); //=> service response invalid
   }
 
   // TODO: Ignore "srv.response.success" because of its redundancy with "srv.response.value"?
+  if (!srv.response.success)
+  {
+    ROS_WARN_STREAM("Service returned: success == false");
+  }
 
   BrakeTestStatus status;
-  status.first = static_cast<int8_t>(std::stoi(srv.response.value));
+  status.first = static_cast<int8_t>(srv.response.value.at(0));
   status.second = srv.response.message;
   return status;
+}
+
+void BrakeTestExecutor::checkBrakeTestResultForJoint(const std::string& joint_name)
+{
+  BrakeTestStatus status {getBrakeTestStatusForJoint(joint_name)};
+  if (status.first != BrakeTest::Response::SUCCESS)
+  {
+    ROS_ERROR_STREAM("Brake test for \"" << joint_name << "\" failed (Status: " << status.first << ")");
+    throw BrakeTestExecutorException(status.second, status.first);
+  }
 }
 
 bool BrakeTestExecutor::executeBraketest(BrakeTest::Request&,
@@ -112,7 +134,7 @@ bool BrakeTestExecutor::executeBraketest(BrakeTest::Request&,
   }
 
   XmlRpc::XmlRpcValue rpc;
-  if ( !nh_.getParam("/prbt/nodes", rpc) )
+  if ( !nh_.getParam("/prbt/driver/nodes", rpc) )
   {
     response.msg = "Could not read joint names";
     response.result = BrakeTest::Response::JOINT_NAMES_NOT_FOUND;
@@ -126,20 +148,23 @@ bool BrakeTestExecutor::executeBraketest(BrakeTest::Request&,
     try
     {
       ros::Duration brake_test_duration(getBrakeTestDuration(joint_name));
+
       triggerBrakeTestForJoint(joint_name);
       brake_test_duration.sleep();
-      BrakeTestStatus status {getBrakeTestStatusForJoint(joint_name)};
-      response.result = status.first;
-      response.msg = status.second;
+
+      checkBrakeTestResultForJoint(joint_name);
     }
     catch (const BrakeTestExecutorException& ex)
     {
+      ROS_ERROR_STREAM("Brake test failed: " << ex.what());
       response.msg = ex.what();
       response.result = ex.getErrorValue();
       return true;
     }
   }
 
+  response.msg = "";
+  response.result = BrakeTest::Response::SUCCESS;
   return true;
 }
 
