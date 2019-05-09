@@ -14,9 +14,11 @@ notifications:
       - i.martini@pilz.de
 env:
   matrix:
-    - ROS_DISTRO="melodic" ROS_REPO=ros CATKIN_LINT=true
-    - ROS_DISTRO="melodic" ROS_REPO=ros-shadow-fixed CATKIN_LINT=true
+    - ROS_DISTRO="melodic" ROS_REPO=ros-shadow-fixed CATKIN_LINT=true COVERAGE_PKGS=prbt_hardware_support
 install:
-  - git clone --depth=1 https://github.com/ros-industrial/industrial_ci.git .industrial_ci
+  - git clone -b feature/coveralls --depth=1 https://github.com/agutenkunst/industrial_ci.git .industrial_ci
+  - gem install coveralls-lcov
 script:
+  - mkdir /tmp/coverage_results
   - .industrial_ci/travis.sh
+  - ls /tmp/coverage_results
