@@ -20,6 +20,8 @@
 
 #include <ros/ros.h>
 
+#include <prbt_hardware_support/IsBrakeTestRequired.h>
+
 namespace prbt_hardware_support
 {
 
@@ -34,12 +36,26 @@ public:
   BrakeTestAnnouncer(ros::NodeHandle& nh);
 
 protected:
-  virtual void sendBrakeTestRequiredMsg(bool brake_test_required) const;
+	void init();
+  virtual void sendBrakeTestRequiredMsg(bool brake_test_required);
+  bool isBrakeTestRequired(IsBrakeTestRequired::Request&, IsBrakeTestRequired::Response& response);
 
 private:
-  //! Publisher used to inform potential listeners about the current
-  //! status of the brake test requirement.
-  ros::Publisher brake_test_required_pub_;
+	//! Is the node initialized?
+	bool initialized_;
+
+	//! Store the current state of whether a brake test is required
+	bool brake_test_required_;
+
+	//! The node handle
+	ros::NodeHandle& nh_;
+
+	//! Publisher used to inform potential listeners about the current
+	//! status of the brake test requirement.
+	ros::Publisher brake_test_required_pub_;
+
+	//! Server serving a service to ask whether a brake test is currently required
+	ros::ServiceServer is_brake_test_required_server_;
 
 };
 

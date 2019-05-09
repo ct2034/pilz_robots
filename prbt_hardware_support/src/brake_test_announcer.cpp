@@ -23,22 +23,42 @@ namespace prbt_hardware_support
 {
 
 static const std::string TOPIC_BRAKE_TEST_REQUIRED = "/prbt/brake_test_required";
+static const std::string SERVICE_NAME_IS_BRAKE_TEST_REQUIRED = "/prbt/is_brake_test_required";
 static constexpr int DEFAULT_QUEUE_SIZE_BRAKE_TEST {1};
 
 BrakeTestAnnouncer::BrakeTestAnnouncer(ros::NodeHandle& nh)
-  : brake_test_required_pub_(nh.advertise<std_msgs::Bool>(TOPIC_BRAKE_TEST_REQUIRED, DEFAULT_QUEUE_SIZE_BRAKE_TEST))
-{
+  : initialized_(false)
+  , nh_(nh)
+  , brake_test_required_pub_(nh.advertise<std_msgs::Bool>(TOPIC_BRAKE_TEST_REQUIRED, DEFAULT_QUEUE_SIZE_BRAKE_TEST)) {
 }
 
-void BrakeTestAnnouncer::sendBrakeTestRequiredMsg(bool brake_test_required) const
+void BrakeTestAnnouncer::init() {
+	is_brake_test_required_server_ = nh_.advertiseService(SERVICE_NAME_IS_BRAKE_TEST_REQUIRED,
+	                                                      &BrakeTestAnnouncer::isBrakeTestRequired,
+	                                                      this);
+}
+
+void BrakeTestAnnouncer::sendBrakeTestRequiredMsg(bool brake_test_required_)
 {
+	// when the first data is received, the node is initialized (i.e. the service advertised)
+	if(!initialized_) {
+		init();
+		initialized_ = true;
+	}
+	brake_test_required_ = brake_test_required_;
+
   std_msgs::Bool pub_msg;
-  pub_msg.data = brake_test_required;
+  pub_msg.data = brake_test_required_;
   brake_test_required_pub_.publish(pub_msg);
 
-  if(brake_test_required){
+  if(brake_test_required_){
     ROS_INFO("Braketest required.");
   }
 }
+
+bool BrakeTestAnnouncer::isBrakeTestRequired(IsBrakeTestRequired::Request&, IsBrakeTestRequired::Response& response) {
+	response.result = brake_test_required_;
+	return true;
+ }
 
 }
