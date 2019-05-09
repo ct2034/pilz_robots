@@ -38,14 +38,14 @@ void BrakeTestAnnouncer::init() {
 	                                                      this);
 }
 
-void BrakeTestAnnouncer::sendBrakeTestRequiredMsg(bool brake_test_required_)
+void BrakeTestAnnouncer::sendBrakeTestRequiredMsg(bool brake_test_required)
 {
 	// when the first data is received, the node is initialized (i.e. the service advertised)
 	if(!initialized_) {
 		init();
 		initialized_ = true;
 	}
-	brake_test_required_ = brake_test_required_;
+	brake_test_required_ = brake_test_required;
 
   std_msgs::Bool pub_msg;
   pub_msg.data = brake_test_required_;
@@ -56,8 +56,9 @@ void BrakeTestAnnouncer::sendBrakeTestRequiredMsg(bool brake_test_required_)
   }
 }
 
-bool BrakeTestAnnouncer::isBrakeTestRequired(IsBrakeTestRequired::Request&, IsBrakeTestRequired::Response& response) {
-	response.result = brake_test_required_;
+bool BrakeTestAnnouncer::isBrakeTestRequired(IsBrakeTestRequired::Request& req,
+				                                     IsBrakeTestRequired::Response& res) {
+	res.result = brake_test_required_;
 	return true;
  }
 
