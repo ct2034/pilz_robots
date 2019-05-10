@@ -17,9 +17,5 @@ env:
     - ROS_DISTRO="melodic" ROS_REPO=ros-shadow-fixed CATKIN_LINT=true COVERAGE_PKGS=prbt_hardware_support
 install:
   - git clone -b feature/coveralls --depth=1 https://github.com/agutenkunst/industrial_ci.git .industrial_ci
-  - gem install coveralls-lcov
 script:
-  - mkdir /tmp/coverage_results
   - .industrial_ci/travis.sh
-  - ls /tmp/coverage_results
-  - coveralls-lcov --repo-token=geXAmDzGpB0o0rIZPN87bCiXSio6pC0aM /tmp/coverage_results/prbt_hardware_support_coverage.info
