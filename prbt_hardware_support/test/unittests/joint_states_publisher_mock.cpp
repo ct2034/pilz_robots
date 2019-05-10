@@ -27,7 +27,7 @@
 namespace prbt_hardware_support
 {
 
-static const std::string JOINT_STATES_TOPIC_NAME{"/joint_states"};
+static const std::string JOINT_STATES_TOPIC_NAME{"/prbt/joint_states"};
 static constexpr unsigned int JOINT_STATES_TOPIC_QUEUE_SIZE{1};
 
 JointStatesPublisherMock::JointStatesPublisherMock()
