@@ -29,6 +29,7 @@
 #include <prbt_hardware_support/brake_test_executor.h>
 #include <prbt_hardware_support/BrakeTest.h>
 #include <prbt_hardware_support/joint_states_publisher_mock.h>
+#include <prbt_hardware_support/canopen_chain_node_mock.h>
 
 namespace brake_test_executor_test
 {
@@ -41,8 +42,6 @@ using canopen_chain_node::GetObjectResponse;
 using canopen_chain_node::SetObjectRequest;
 using canopen_chain_node::SetObjectResponse;
 
-static const std::string CANOPEN_GETOBJECT_SERVICE_NAME{"driver/get_object"};
-static const std::string CANOPEN_SETOBJECT_SERVICE_NAME{"driver/set_object"};
 static const std::string BRAKE_TEST_SERVICE_NAME{"execute_braketest"};
 
 static const std::string BRAKE_TEST_DURATION_OBJECT_INDEX{"2060sub1"};
@@ -53,91 +52,6 @@ static const std::string NODE_NAMES_PARAMETER_NAME{"/prbt/driver/nodes"};
 static const std::string NODE_NAMES_PREFIX{"prbt_joint_"};
 static constexpr int NODE_COUNT{6};
 static const std::vector<size_t> NODE_TEST_SET{{0, 2, 5}};
-
-class CANOpenChainNodeMock
-{
-public:
-  /**
-   * @brief Advertise get_object and set_object services for CANOpen objects and call setDefaultActions().
-   */
-  CANOpenChainNodeMock();
-
-  /**
-   * @brief Set default actions on all expected service calls.
-   *
-   * Does not set any expectations.
-   */
-  void setDefaultActions();
-
-  /**
-   * @brief Set expectations on all mock methods, that can be fullfilled in any case.
-   *
-   * Allows any number of calls on get_obj() and set_obj.
-   */
-  void expectAnything();
-
-  /**
-   * @brief Un-advertise services.
-   */
-  void shutdown();
-
-public:
-  MOCK_METHOD2(get_obj, bool(canopen_chain_node::GetObjectRequest &, canopen_chain_node::GetObjectResponse &));
-  MOCK_METHOD2(set_obj, bool(canopen_chain_node::SetObjectRequest &, canopen_chain_node::SetObjectResponse &));
-
-private:
-  ros::NodeHandle nh_;
-  ros::ServiceServer get_obj_serv_;
-  ros::ServiceServer set_obj_serv_;
-};
-
-CANOpenChainNodeMock::CANOpenChainNodeMock()
-{
-  get_obj_serv_ = nh_.advertiseService(CANOPEN_GETOBJECT_SERVICE_NAME, &CANOpenChainNodeMock::get_obj, this);
-  set_obj_serv_ = nh_.advertiseService(CANOPEN_SETOBJECT_SERVICE_NAME, &CANOpenChainNodeMock::set_obj, this);
-
-  setDefaultActions();
-}
-
-void CANOpenChainNodeMock::setDefaultActions()
-{
-  GetObjectResponse duration_resp;
-  duration_resp.success = true;
-  duration_resp.value = "1";
-
-  SetObjectResponse start_resp;
-  start_resp.success = true;
-
-  GetObjectResponse status_resp;
-  status_resp.success = true;
-  status_resp.value = "\x02";
-
-  // Set response for service calls getting the brake_test_duration object
-  ON_CALL(*this, get_obj(Field(&GetObjectRequest::object, BRAKE_TEST_DURATION_OBJECT_INDEX), _))
-      .WillByDefault(DoAll(SetArgReferee<1>(duration_resp), Return(true)));
-
-  // Set response for service calls setting the start_brake_test object
-  ON_CALL(*this, set_obj(Field(&SetObjectRequest::object, START_BRAKE_TEST_OBJECT_INDEX), _))
-      .WillByDefault(DoAll(SetArgReferee<1>(start_resp), Return(true)));
-
-  // Set response for service calls getting the brake_test_status object
-  ON_CALL(*this, get_obj(Field(&GetObjectRequest::object, BRAKE_TEST_STATUS_OBJECT_INDEX), _))
-      .WillByDefault(DoAll(SetArgReferee<1>(status_resp), Return(true)));
-}
-
-void CANOpenChainNodeMock::expectAnything()
-{
-  EXPECT_CALL(*this, get_obj(_, _))
-      .Times(AnyNumber());
-  EXPECT_CALL(*this, set_obj(_, _))
-      .Times(AnyNumber());
-}
-
-void CANOpenChainNodeMock::shutdown()
-{
-  get_obj_serv_.shutdown();
-  set_obj_serv_.shutdown();
-}
 
 /**
  * @brief Construct CANOpenChainNodeMock and BrakeTestExecutor objects and service client for the BrakeTest service.

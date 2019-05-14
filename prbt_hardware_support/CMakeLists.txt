@@ -203,6 +203,7 @@ if(CATKIN_ENABLE_TESTING)
     test/unittests/unittest_brake_test_executor.test
     test/unittests/unittest_brake_test_executor.cpp
     test/unittests/joint_states_publisher_mock.cpp
+    test/unittests/canopen_chain_node_mock.cpp
     src/brake_test_executor.cpp
   )
   target_link_libraries(unittest_brake_test_executor
@@ -237,6 +238,18 @@ if(CATKIN_ENABLE_TESTING)
   )
   add_dependencies(integrationtest_brake_test_required ${catkin_EXPORTED_TARGETS})
   #----------------------------------
+
+  # --- Trigger brake test integration test ---
+  add_rostest_gmock(integrationtest_trigger_brake_test
+    test/integrationtests/integrationtest_trigger_brake_test.test
+    test/integrationtests/integrationtest_trigger_brake_test.cpp
+    test/unittests/joint_states_publisher_mock.cpp
+    test/unittests/canopen_chain_node_mock.cpp
+  )
+  target_link_libraries(integrationtest_trigger_brake_test
+    ${catkin_LIBRARIES} ${pilz_testutils_LIBRARIES}
+  )
+  add_dependencies(integrationtest_trigger_brake_test ${catkin_EXPORTED_TARGETS})
 
   # to run: catkin_make -DENABLE_COVERAGE_TESTING=ON package_name_coverage (adding -j1 recommended)
   if(ENABLE_COVERAGE_TESTING)
