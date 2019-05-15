@@ -101,14 +101,15 @@ BrakeTestExecutor::BrakeTestStatus BrakeTestExecutor::getBrakeTestStatusForJoint
                                      BrakeTest::Response::FAILED_TO_GET_STATUS); //=> service response invalid
   }
 
-  // TODO: Ignore "srv.response.success" because of its redundancy with "srv.response.value"?
   if (!srv.response.success)
   {
     ROS_WARN_STREAM("Service returned: success == false");
+    throw BrakeTestExecutorException("Reading of CANopen to determine brake test status failed",
+                                     BrakeTest::Response::FAILED_TO_GET_STATUS);
   }
 
   BrakeTestStatus status;
-  status.first = static_cast<int8_t>(srv.response.value.at(0));
+  status.first = static_cast<int8_t>(srv.response.value.data()[0]);
   status.second = srv.response.message;
   return status;
 }
@@ -118,7 +119,7 @@ void BrakeTestExecutor::checkBrakeTestResultForJoint(const std::string& joint_na
   BrakeTestStatus status {getBrakeTestStatusForJoint(joint_name)};
   if (status.first != BrakeTest::Response::SUCCESS)
   {
-    ROS_ERROR_STREAM("Brake test for \"" << joint_name << "\" failed (Status: " << status.first << ")");
+    ROS_ERROR("Brake test for %s failed (Status: %d)", joint_name.c_str(), status.first);
     throw BrakeTestExecutorException(status.second, status.first);
   }
 }
