@@ -16,6 +16,6 @@ env:
   matrix:
     - ROS_DISTRO="melodic" ROS_REPO=ros-shadow-fixed CATKIN_LINT=true COVERAGE_PKGS=prbt_hardware_support
 install:
-  - git clone -b feature/coveralls --depth=1 https://github.com/agutenkunst/industrial_ci.git .industrial_ci
+  - git clone -b feature/coveralls --depth=1 https://github.com/ct2034/industrial_ci.git .industrial_ci
 script:
   - .industrial_ci/travis.sh
