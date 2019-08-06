@@ -1,5 +1,6 @@
 FROM ubuntu:bionic
 ARG DEBIAN_FRONTEND=noninteractive
+ENV ROS_DISTRO=melodic
 
 RUN apt update
 RUN apt -y install gnupg
